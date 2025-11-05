@@ -1,6 +1,13 @@
 # Live Video Social App
 
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./VERSION)
+[![Milestone](https://img.shields.io/badge/milestone-0%20complete-success.svg)](./MILESTONE_0_SUMMARY.md)
+[![Node](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/license-proprietary-red.svg)]()
+
 A cross-platform social video & chat application similar to Mico or Bling, featuring 1-to-1 and party video calls, real-time chat, virtual currency system, and gamification.
+
+> **📌 Current Version:** 1.0.0 | **Milestone 0:** ✅ Complete | **Last Updated:** 2025-11-06
 
 ## 🚀 Features
 
