@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run linter
+        run: npm run lint
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Build packages
+        run: npm run build
+
+  backend-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: livevideo_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Generate Prisma Client
+        working-directory: packages/backend
+        run: npx prisma generate
+      
+      - name: Run database migrations
+        working-directory: packages/backend
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/livevideo_test
+      
+      - name: Run backend tests
+        working-directory: packages/backend
+        run: npm test
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/livevideo_test
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_SECRET: test-secret
+
+  docker-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build backend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: packages/backend/Dockerfile
+          push: false
+          tags: livevideo-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

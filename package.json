@@ -1,0 +1,35 @@
+{
+  "name": "live-video-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Live video social app monorepo",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "start:dev": "concurrently \"npm run dev:backend\" \"npm run dev:admin\"",
+    "dev:backend": "npm run dev --workspace=@live-video-app/backend",
+    "dev:admin": "npm run dev --workspace=@live-video-app/admin",
+    "dev:mobile": "npm run start --workspace=@live-video-app/mobile",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "lint:fix": "npm run lint:fix --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "prisma:generate": "npm run prisma:generate --workspace=@live-video-app/backend",
+    "prisma:migrate": "npm run prisma:migrate --workspace=@live-video-app/backend",
+    "prisma:studio": "npm run prisma:studio --workspace=@live-video-app/backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  }
+}

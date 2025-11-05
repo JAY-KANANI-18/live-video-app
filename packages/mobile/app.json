@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "LiveVideoApp",
+    "slug": "live-video-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "livevideo",
+    "platforms": ["ios", "android"],
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.livevideo.app"
+    },
+    "android": {
+      "package": "com.livevideo.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

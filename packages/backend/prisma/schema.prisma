@@ -1,0 +1,299 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  HOST
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum CallStatus {
+  PENDING
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum CallType {
+  ONE_TO_ONE
+  PARTY
+}
+
+enum TransactionType {
+  PURCHASE
+  GIFT_SENT
+  GIFT_RECEIVED
+  WITHDRAWAL
+  REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum KYCStatus {
+  NOT_SUBMITTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id              String      @id @default(cuid())
+  firebaseUid     String      @unique
+  email           String      @unique
+  username        String      @unique
+  displayName     String?
+  phoneNumber     String?
+  avatar          String?
+  bio             String?
+  dateOfBirth     DateTime?
+  gender          String?
+  country         String?
+  
+  role            UserRole    @default(USER)
+  status          UserStatus  @default(ACTIVE)
+  isHost          Boolean     @default(false)
+  isVerified      Boolean     @default(false)
+  
+  // Gamification
+  level           Int         @default(1)
+  experience      Int         @default(0)
+  
+  // Currency
+  diamonds        Int         @default(0)
+  
+  // Stats
+  totalCallsMade  Int         @default(0)
+  totalGiftsSent  Int         @default(0)
+  totalGiftsReceived Int      @default(0)
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  lastLoginAt     DateTime?
+  
+  // Relations
+  hostProfile     HostProfile?
+  callsInitiated  Call[]      @relation("CallInitiator")
+  callsReceived   Call[]      @relation("CallReceiver")
+  callParticipants CallParticipant[]
+  transactions    Transaction[]
+  giftsGiven      Gift[]      @relation("GiftGiver")
+  giftsReceived   Gift[]      @relation("GiftReceiver")
+  withdrawals     Withdrawal[]
+  agencyReferrals AgencyReferral[] @relation("Agency")
+  referredBy      AgencyReferral?  @relation("ReferredHost")
+  
+  @@index([email])
+  @@index([username])
+  @@index([firebaseUid])
+}
+
+model HostProfile {
+  id              String      @id @default(cuid())
+  userId          String      @unique
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Host specific
+  hourlyRate      Int         @default(0) // in diamonds
+  totalEarnings   Int         @default(0) // in diamonds
+  availableBalance Int        @default(0) // withdrawable amount
+  
+  // Stats
+  totalCalls      Int         @default(0)
+  totalMinutes    Int         @default(0)
+  rating          Float       @default(0)
+  totalReviews    Int         @default(0)
+  
+  // KYC
+  kycStatus       KYCStatus   @default(NOT_SUBMITTED)
+  kycDocuments    Json?
+  
+  // Bank details (encrypted)
+  bankDetails     Json?
+  
+  isOnline        Boolean     @default(false)
+  isBusy          Boolean     @default(false)
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@index([userId])
+}
+
+model Call {
+  id              String      @id @default(cuid())
+  
+  callerId        String
+  caller          User        @relation("CallInitiator", fields: [callerId], references: [id])
+  
+  receiverId      String?
+  receiver        User?       @relation("CallReceiver", fields: [receiverId], references: [id])
+  
+  type            CallType
+  status          CallStatus  @default(PENDING)
+  
+  // Agora/Zego session
+  channelName     String      @unique
+  token           String?
+  
+  startedAt       DateTime?
+  endedAt         DateTime?
+  duration        Int         @default(0) // in seconds
+  
+  // Cost
+  diamondsCharged Int         @default(0)
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  // Relations
+  participants    CallParticipant[]
+  gifts           Gift[]
+  
+  @@index([callerId])
+  @@index([receiverId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model CallParticipant {
+  id              String      @id @default(cuid())
+  
+  callId          String
+  call            Call        @relation(fields: [callId], references: [id], onDelete: Cascade)
+  
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  
+  joinedAt        DateTime    @default(now())
+  leftAt          DateTime?
+  
+  @@unique([callId, userId])
+  @@index([callId])
+  @@index([userId])
+}
+
+model Gift {
+  id              String      @id @default(cuid())
+  
+  giverId         String
+  giver           User        @relation("GiftGiver", fields: [giverId], references: [id])
+  
+  receiverId      String
+  receiver        User        @relation("GiftReceiver", fields: [receiverId], references: [id])
+  
+  callId          String?
+  call            Call?       @relation(fields: [callId], references: [id])
+  
+  giftType        String      // e.g., "rose", "car", "yacht"
+  diamondValue    Int
+  
+  message         String?
+  
+  createdAt       DateTime    @default(now())
+  
+  @@index([giverId])
+  @@index([receiverId])
+  @@index([callId])
+  @@index([createdAt])
+}
+
+model Transaction {
+  id              String            @id @default(cuid())
+  
+  userId          String
+  user            User              @relation(fields: [userId], references: [id])
+  
+  type            TransactionType
+  status          TransactionStatus @default(PENDING)
+  
+  amount          Int               // in diamonds or INR (cents)
+  currency        String            @default("INR")
+  
+  // Payment gateway details
+  razorpayOrderId   String?         @unique
+  razorpayPaymentId String?         @unique
+  razorpaySignature String?
+  
+  description     String?
+  metadata        Json?
+  
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Withdrawal {
+  id              String            @id @default(cuid())
+  
+  userId          String
+  user            User              @relation(fields: [userId], references: [id])
+  
+  amount          Int               // in INR (cents)
+  diamonds        Int               // diamonds to withdraw
+  
+  status          WithdrawalStatus  @default(PENDING)
+  
+  bankDetails     Json              // account details for transfer
+  
+  processedAt     DateTime?
+  rejectionReason String?
+  
+  transactionRef  String?           @unique
+  
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AgencyReferral {
+  id              String      @id @default(cuid())
+  
+  agencyId        String
+  agency          User        @relation("Agency", fields: [agencyId], references: [id])
+  
+  hostId          String      @unique
+  host            User        @relation("ReferredHost", fields: [hostId], references: [id])
+  
+  commissionRate  Float       @default(10) // percentage
+  totalEarnings   Int         @default(0)
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@index([agencyId])
+  @@index([hostId])
+}
