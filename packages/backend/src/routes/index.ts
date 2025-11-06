@@ -20,7 +20,8 @@ router.get('/v1/status', (req, res) => {
   res.json({
     version: '1.2.0',
     status: 'active',
-    features: ['auth', 'agency', 'wallet', 'admin'],
+    milestone: 'Milestone 2 - Wallet & Payments',
+    features: ['auth', 'agency', 'wallet', 'payments', 'admin'],
   });
 });
 

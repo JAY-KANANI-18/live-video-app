@@ -11,7 +11,7 @@ const router = Router();
  */
 router.post('/topup', requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
     const { diamonds, idempotencyKey } = req.body;
 
     // Validation
@@ -41,7 +41,7 @@ router.post('/topup', requireAuth, async (req: Request, res: Response) => {
  */
 router.post('/verify', requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
     const { orderId, paymentId, signature } = req.body;
 
     // Validation
@@ -69,7 +69,7 @@ router.post('/verify', requireAuth, async (req: Request, res: Response) => {
  */
 router.post('/send-gift', requireAuth, async (req: Request, res: Response) => {
   try {
-    const giverId = req.user!.id;
+    const giverId = req.user!.userId;
     const { receiverId, diamonds, giftType, message, callId, idempotencyKey } = req.body;
 
     // Validation
@@ -115,7 +115,7 @@ router.post('/send-gift', requireAuth, async (req: Request, res: Response) => {
  */
 router.get('/balance', requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     const balance = await walletService.getBalance(userId);
 
@@ -134,7 +134,7 @@ router.get('/balance', requireAuth, async (req: Request, res: Response) => {
  */
 router.get('/transactions', requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
     const limit = parseInt(req.query.limit as string) || 50;
     const offset = parseInt(req.query.offset as string) || 0;
 
@@ -153,7 +153,7 @@ router.get('/transactions', requireAuth, async (req: Request, res: Response) => 
  */
 router.get('/payment-orders', requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
     const limit = parseInt(req.query.limit as string) || 50;
     const offset = parseInt(req.query.offset as string) || 0;
 

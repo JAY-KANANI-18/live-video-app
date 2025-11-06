@@ -5,6 +5,64 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-11-06
+
+### Added - Milestone 2: Wallet, Diamonds & Payment Integration
+
+#### Backend
+- **Payment Service Abstraction** - Support for Razorpay/Stripe/Mock providers
+- **Mock Payment Provider** - Development mode with simulated payments
+- **PaymentOrder Model** - Track payment orders with provider details
+- **Transaction Ledger** - Complete audit trail with idempotency
+- **Wallet Endpoints** - 6 new endpoints (topup, verify, send-gift, balance, transactions, payment-orders)
+- **Admin Audit Endpoints** - 5 endpoints for transaction auditing and platform statistics
+- **Diamond Conversion** - 1 INR = 10 diamonds conversion system
+- **Idempotency Support** - Prevent duplicate transactions and payments
+- **Agency Commission** - Automatic calculation on gift transfers
+- **Balance Validation** - Insufficient funds checking
+- **KYC Fields** - 14 fields in User model for compliance
+
+#### Mobile App
+- **Wallet Service** - Complete API client for wallet operations
+- **WalletScreen** - Dashboard with balance, quick actions, host wallet stats
+- **TopupScreen** - 6 predefined packages + custom amount input
+- **SendGiftScreen** - 8-gift catalog with quantity selector
+- **TransactionsScreen** - Transaction history with pagination
+- **Gift Catalog** - Rose (10💎) to Mansion (50,000💎)
+- **Auto-Refresh** - Profile and balance refresh on screen focus
+- **Mock Payment Flow** - Auto-verify in development mode
+- **Profile Integration** - Wallet card on profile screen
+
+#### Database
+- **PaymentOrder Table** - Payment tracking with provider integration
+- **Payment Enums** - PaymentStatus, PaymentProvider
+- **Transaction Idempotency** - Unique keys for duplicate prevention
+- **KYC Compliance** - Full name, documents, address, status tracking
+
+### Changed
+- **Auth Responses** - Now include level, experience, diamonds in all responses
+- **JWT Payload** - Fixed userId field access in wallet routes
+- **Profile Stats** - Display defaults (0) when values undefined
+- **API Version** - Updated to 1.2.0 with wallet features
+
+### Fixed
+- **Profile Display Bug** - Level, diamonds, XP now show correctly
+- **Login Response** - Missing user stats fields added
+- **Refresh Token** - Complete user data in token refresh
+- **Wallet Balance Error** - Fixed userId vs id mismatch in routes
+- **Auto-Refresh** - Screens now update on focus
+
+### Security
+- **Payment Verification** - HMAC SHA256 signature validation
+- **Idempotency Keys** - Prevent duplicate charges
+- **Balance Checks** - Atomic database transactions
+- **Audit Trail** - Immutable transaction ledger
+
+### Documentation
+- **MILESTONE_2_SUMMARY.md** - Complete backend implementation guide
+- **MILESTONE_2_MOBILE_COMPLETE.md** - Mobile app implementation guide
+- **BUGFIX_PROFILE_STATS.md** - Profile display bug fix documentation
+
 ## [1.1.0] - 2025-11-06
 
 ### Added - Milestone 1: Authentication & Agency System
