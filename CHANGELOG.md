@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-11-06
+
+### Added - Milestone 1: Authentication & Agency System
+
+#### Backend
+- **OTP-based Authentication** - Email/phone OTP verification system
+- **JWT Token Management** - Access tokens (15min) + refresh tokens (7 days)
+- **User Registration** - Age validation (18+), username uniqueness checks
+- **Profile Management** - CRUD operations for user profiles
+- **Agency System** - Join/leave agency with unique codes
+- **Auth Middleware** - `requireAuth`, `requireRole`, `requireHost`, `requireAdmin`
+- **Prisma Models** - Agency, Wallet, RefreshToken, OTPCode
+- **Security** - bcrypt password hashing, JWT with agencyId claims
+- **API Endpoints** - 11 new auth & agency endpoints
+- **Tests** - Comprehensive test coverage for auth flows
+
+#### Mobile App
+- **Login/Signup Screens** - OTP-based authentication UI
+- **Profile Screen** - View/edit user profile with stats
+- **Agency Screens** - Join agency, view agency details
+- **State Management** - Zustand store for auth state
+- **API Integration** - Axios client with auto token refresh
+- **Secure Storage** - AsyncStorage for JWT tokens
+- **Navigation** - Auth vs Main stack routing
+- **Error Handling** - User-friendly error messages
+
+#### Infrastructure
+- **Database Schema** - Updated with 4 new models
+- **Migration System** - Prisma migrations ready
+- **Docker Support** - Simplified development Dockerfile
+- **Environment Config** - JWT secrets, token expiry settings
+
+### Changed
+- **User Model** - Removed `firebaseUid`, added email/phone auth fields
+- **Token Expiry** - Access token now 15 minutes (was 7 days)
+- **Expo Version** - Upgraded to Expo 54 with React 19
+- **Prisma Version** - Locked to 5.22.0 for consistency
+
+### Fixed
+- **Prisma Version Mismatch** - Both CLI and client at 5.22.0
+- **Mobile Dependencies** - Added react-native-worklets-core
+- **Babel Config** - Removed NativeWind plugin temporarily
+- **Docker Build** - Simplified Dockerfile for development
+
+### Security
+- **Password Hashing** - bcrypt with 10 salt rounds
+- **Token Security** - Refresh tokens hashed in database
+- **Age Verification** - Strict 18+ enforcement
+- **Input Validation** - Email, phone, username format checks
+
+### Documentation
+- **MILESTONE_1_COMPLETE.md** - Complete feature documentation
+- **MOBILE_APP_IMPLEMENTATION.md** - Mobile implementation guide
+- **MIGRATION_GUIDE.md** - Database migration instructions
+- **API Documentation** - All endpoints documented with examples
+
 ## [Unreleased]
 
 ### Planned for Milestone 1

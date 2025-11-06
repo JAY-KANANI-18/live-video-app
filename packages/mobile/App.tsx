@@ -1,31 +1,91 @@
+import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, StyleSheet } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { ActivityIndicator, View } from 'react-native';
 
-export default function App() {
+// Import screens
+import LoginScreen from './src/screens/auth/LoginScreen';
+import SignupScreen from './src/screens/auth/SignupScreen';
+import ProfileScreen from './src/screens/profile/ProfileScreen';
+import JoinAgencyScreen from './src/screens/agency/JoinAgencyScreen';
+import AgencyScreen from './src/screens/agency/AgencyScreen';
+
+// Import store
+import { useAuthStore } from './src/store/authStore';
+
+const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+
+// Auth Stack (Login/Signup)
+function AuthStack() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Live Video App</Text>
-      <Text style={styles.subtitle}>Mobile client coming soon...</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen 
+        name="Signup" 
+        component={SignupScreen}
+        options={{ headerShown: true, title: 'Sign Up' }}
+      />
+    </Stack.Navigator>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
-  },
-  subtitle: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#6b7280',
-  },
-});
+// Main App Stack (After Login)
+function MainStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen 
+        name="ProfileTab" 
+        component={ProfileScreen}
+        options={{ title: 'Profile' }}
+      />
+      <Stack.Screen 
+        name="JoinAgency" 
+        component={JoinAgencyScreen}
+        options={{ title: 'Join Agency' }}
+      />
+      <Stack.Screen 
+        name="Agency" 
+        component={AgencyScreen}
+        options={{ title: 'My Agency' }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+export default function App() {
+  const { isAuthenticated, isLoading, loadStoredUser } = useAuthStore();
+  const [initializing, setInitializing] = useState(true);
+
+  useEffect(() => {
+    // Load stored user on app start
+    const initAuth = async () => {
+      await loadStoredUser();
+      setInitializing(false);
+    };
+
+    initAuth();
+  }, []);
+
+  // Show loading screen while checking auth
+  if (initializing || isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#3b82f6" />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      <StatusBar style="auto" />
+      {isAuthenticated ? <MainStack /> : <AuthStack />}
+    </NavigationContainer>
+  );
+}

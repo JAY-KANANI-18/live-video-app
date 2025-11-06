@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import authRoutes from './auth';
+import agencyRoutes from './agency';
 
 const router = Router();
 
@@ -14,13 +16,19 @@ router.get('/health', (req, res) => {
 // API v1 routes
 router.get('/v1/status', (req, res) => {
   res.json({
-    version: '1.0.0',
+    version: '1.1.0',
     status: 'active',
+    features: ['auth', 'agency'],
   });
 });
 
+// Auth routes
+router.use('/v1/auth', authRoutes);
+
+// Agency routes
+router.use('/v1/agency', agencyRoutes);
+
 // TODO: Add more route modules
-// router.use('/v1/auth', authRoutes);
 // router.use('/v1/users', userRoutes);
 // router.use('/v1/calls', callRoutes);
 // router.use('/v1/gifts', giftRoutes);

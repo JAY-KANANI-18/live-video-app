@@ -63,23 +63,40 @@ enum KYCStatus {
   REJECTED
 }
 
+enum OTPType {
+  EMAIL_VERIFICATION
+  PHONE_VERIFICATION
+  LOGIN
+  PASSWORD_RESET
+}
+
 model User {
   id              String      @id @default(cuid())
-  firebaseUid     String      @unique
-  email           String      @unique
+  
+  // Auth fields
+  email           String?     @unique
+  emailVerified   Boolean     @default(false)
+  phoneNumber     String?     @unique
+  phoneVerified   Boolean     @default(false)
+  passwordHash    String?     // Optional: for email/password auth
+  
+  // Profile
   username        String      @unique
   displayName     String?
-  phoneNumber     String?
   avatar          String?
   bio             String?
-  dateOfBirth     DateTime?
+  dateOfBirth     DateTime?   // Required for age validation (>=18)
   gender          String?
   country         String?
   
+  // Role & Status
   role            UserRole    @default(USER)
   status          UserStatus  @default(ACTIVE)
   isHost          Boolean     @default(false)
-  isVerified      Boolean     @default(false)
+  
+  // Agency relationship
+  agencyId        String?
+  agency          Agency?     @relation(fields: [agencyId], references: [id])
   
   // Gamification
   level           Int         @default(1)
@@ -99,6 +116,9 @@ model User {
   
   // Relations
   hostProfile     HostProfile?
+  wallet          Wallet?
+  refreshTokens   RefreshToken[]
+  otpCodes        OTPCode[]
   callsInitiated  Call[]      @relation("CallInitiator")
   callsReceived   Call[]      @relation("CallReceiver")
   callParticipants CallParticipant[]
@@ -106,12 +126,106 @@ model User {
   giftsGiven      Gift[]      @relation("GiftGiver")
   giftsReceived   Gift[]      @relation("GiftReceiver")
   withdrawals     Withdrawal[]
-  agencyReferrals AgencyReferral[] @relation("Agency")
-  referredBy      AgencyReferral?  @relation("ReferredHost")
   
   @@index([email])
+  @@index([phoneNumber])
   @@index([username])
-  @@index([firebaseUid])
+  @@index([agencyId])
+}
+
+model Agency {
+  id              String      @id @default(cuid())
+  
+  name            String
+  code            String      @unique // Unique code for hosts to join
+  email           String      @unique
+  phoneNumber     String?
+  
+  // Commission settings
+  commissionRate  Float       @default(10.0) // percentage
+  
+  // Contact & Details
+  contactPerson   String?
+  address         String?
+  
+  // Status
+  isActive        Boolean     @default(true)
+  
+  // Stats
+  totalHosts      Int         @default(0)
+  totalEarnings   Int         @default(0) // in diamonds
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  // Relations
+  hosts           User[]
+  
+  @@index([code])
+  @@index([email])
+}
+
+model Wallet {
+  id              String      @id @default(cuid())
+  userId          String      @unique
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Balances
+  availableBalance Int        @default(0) // withdrawable amount in diamonds
+  pendingBalance   Int        @default(0) // pending clearance
+  totalEarned      Int        @default(0) // lifetime earnings
+  totalWithdrawn   Int        @default(0) // lifetime withdrawals
+  
+  // Bank details (encrypted in production)
+  bankDetails     Json?
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@index([userId])
+}
+
+model RefreshToken {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  tokenHash       String      @unique // hashed refresh token
+  
+  expiresAt       DateTime
+  createdAt       DateTime    @default(now())
+  
+  // Device/session info
+  userAgent       String?
+  ipAddress       String?
+  
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+}
+
+model OTPCode {
+  id              String      @id @default(cuid())
+  userId          String?
+  user            User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Contact info (for users not yet registered)
+  email           String?
+  phoneNumber     String?
+  
+  code            String      // OTP code (hashed in production)
+  type            OTPType
+  
+  verified        Boolean     @default(false)
+  attempts        Int         @default(0)
+  
+  expiresAt       DateTime
+  createdAt       DateTime    @default(now())
+  
+  @@index([email])
+  @@index([phoneNumber])
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model HostProfile {
@@ -279,21 +393,3 @@ model Withdrawal {
   @@index([createdAt])
 }
 
-model AgencyReferral {
-  id              String      @id @default(cuid())
-  
-  agencyId        String
-  agency          User        @relation("Agency", fields: [agencyId], references: [id])
-  
-  hostId          String      @unique
-  host            User        @relation("ReferredHost", fields: [hostId], references: [id])
-  
-  commissionRate  Float       @default(10) // percentage
-  totalEarnings   Int         @default(0)
-  
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  
-  @@index([agencyId])
-  @@index([hostId])
-}
