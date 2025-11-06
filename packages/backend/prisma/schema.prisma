@@ -70,6 +70,20 @@ enum OTPType {
   PASSWORD_RESET
 }
 
+enum PaymentStatus {
+  CREATED
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  RAZORPAY
+  STRIPE
+  MOCK  // For development/testing
+}
+
 model User {
   id              String      @id @default(cuid())
   
@@ -110,6 +124,23 @@ model User {
   totalGiftsSent  Int         @default(0)
   totalGiftsReceived Int      @default(0)
   
+  // KYC Fields
+  kycStatus       KYCStatus   @default(NOT_SUBMITTED)
+  kycFullName     String?
+  kycDocumentType String?     // "passport", "driving_license", "aadhar"
+  kycDocumentNumber String?
+  kycDocumentFront String?    // Document image URL
+  kycDocumentBack  String?    // Document image URL
+  kycSelfie       String?     // Selfie URL for verification
+  kycAddress      String?
+  kycCity         String?
+  kycState        String?
+  kycPostalCode   String?
+  kycSubmittedAt  DateTime?
+  kycApprovedAt   DateTime?
+  kycRejectedAt   DateTime?
+  kycRejectionReason String?
+  
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   lastLoginAt     DateTime?
@@ -123,6 +154,7 @@ model User {
   callsReceived   Call[]      @relation("CallReceiver")
   callParticipants CallParticipant[]
   transactions    Transaction[]
+  paymentOrders   PaymentOrder[]
   giftsGiven      Gift[]      @relation("GiftGiver")
   giftsReceived   Gift[]      @relation("GiftReceiver")
   withdrawals     Withdrawal[]
@@ -355,6 +387,9 @@ model Transaction {
   razorpayPaymentId String?         @unique
   razorpaySignature String?
   
+  // Idempotency
+  idempotencyKey  String?           @unique
+  
   description     String?
   metadata        Json?
   
@@ -364,6 +399,47 @@ model Transaction {
   @@index([userId])
   @@index([type])
   @@index([status])
+  @@index([createdAt])
+  @@index([idempotencyKey])
+}
+
+model PaymentOrder {
+  id              String            @id @default(cuid())
+  
+  userId          String
+  user            User              @relation(fields: [userId], references: [id])
+  
+  provider        PaymentProvider   @default(MOCK)
+  status          PaymentStatus     @default(CREATED)
+  
+  // Amount details
+  amount          Int               // in smallest currency unit (paise for INR, cents for USD)
+  currency        String            @default("INR")
+  diamonds        Int               // diamonds to be credited
+  
+  // Provider-specific IDs
+  providerOrderId   String?         @unique  // e.g., Razorpay order_id
+  providerPaymentId String?         @unique  // e.g., Razorpay payment_id
+  providerSignature String?
+  
+  // Idempotency
+  idempotencyKey  String?           @unique
+  
+  // Payment details
+  receipt         String?           // receipt number
+  notes           Json?
+  
+  // Status tracking
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  completedAt     DateTime?
+  failedAt        DateTime?
+  failureReason   String?
+  
+  @@index([userId])
+  @@index([status])
+  @@index([providerOrderId])
+  @@index([idempotencyKey])
   @@index([createdAt])
 }
 

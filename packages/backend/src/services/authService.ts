@@ -269,10 +269,18 @@ export class AuthService {
         username: user.username,
         displayName: user.displayName,
         avatar: user.avatar,
+        bio: user.bio,
+        dateOfBirth: user.dateOfBirth,
+        gender: user.gender,
+        country: user.country,
         role: user.role,
         isHost: user.isHost,
         agencyId: user.agencyId,
+        level: user.level,
+        experience: user.experience,
+        diamonds: user.diamonds,
         wallet: user.wallet,
+        hostProfile: user.hostProfile,
       },
       ...tokens,
     };
@@ -295,6 +303,7 @@ export class AuthService {
         include: {
           user: {
             include: {
+              wallet: true,
               agency: true,
               hostProfile: true,
             },
@@ -333,9 +342,19 @@ export class AuthService {
           phoneNumber: storedToken.user.phoneNumber,
           username: storedToken.user.username,
           displayName: storedToken.user.displayName,
+          avatar: storedToken.user.avatar,
+          bio: storedToken.user.bio,
+          dateOfBirth: storedToken.user.dateOfBirth,
+          gender: storedToken.user.gender,
+          country: storedToken.user.country,
           role: storedToken.user.role,
           isHost: storedToken.user.isHost,
           agencyId: storedToken.user.agencyId,
+          level: storedToken.user.level,
+          experience: storedToken.user.experience,
+          diamonds: storedToken.user.diamonds,
+          wallet: storedToken.user.wallet,
+          hostProfile: storedToken.user.hostProfile,
         },
       };
     } catch (error) {

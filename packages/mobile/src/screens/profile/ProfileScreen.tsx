@@ -9,10 +9,11 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuthStore } from '../../store/authStore';
 
 export default function ProfileScreen({ navigation }: any) {
-  const { user, updateProfile, logout, isLoading } = useAuthStore();
+  const { user, updateProfile, logout, isLoading, refreshProfile } = useAuthStore();
 
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [bio, setBio] = useState(user?.bio || '');
@@ -28,6 +29,13 @@ export default function ProfileScreen({ navigation }: any) {
       setGender(user.gender || '');
     }
   }, [user]);
+
+  // Refresh profile when screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      refreshProfile();
+    }, [])
+  );
 
   const handleSave = async () => {
     try {
@@ -83,15 +91,15 @@ export default function ProfileScreen({ navigation }: any) {
 
       <View style={styles.statsContainer}>
         <View style={styles.statBox}>
-          <Text style={styles.statValue}>{user.level}</Text>
+          <Text style={styles.statValue}>{user.level || 0}</Text>
           <Text style={styles.statLabel}>Level</Text>
         </View>
         <View style={styles.statBox}>
-          <Text style={styles.statValue}>{user.diamonds}</Text>
+          <Text style={styles.statValue}>{user.diamonds || 0}</Text>
           <Text style={styles.statLabel}>Diamonds</Text>
         </View>
         <View style={styles.statBox}>
-          <Text style={styles.statValue}>{user.experience}</Text>
+          <Text style={styles.statValue}>{user.experience || 0}</Text>
           <Text style={styles.statLabel}>XP</Text>
         </View>
       </View>
@@ -191,6 +199,18 @@ export default function ProfileScreen({ navigation }: any) {
           </View>
         )}
       </View>
+
+      {/* Wallet Section */}
+      <TouchableOpacity
+        style={styles.walletCard}
+        onPress={() => navigation.navigate('Wallet')}
+      >
+        <View style={styles.walletHeader}>
+          <Text style={styles.walletTitle}>💎 My Wallet</Text>
+          <Text style={styles.walletBalance}>{user.diamonds || 0} Diamonds</Text>
+        </View>
+        <Text style={styles.walletSubtitle}>Tap to view wallet →</Text>
+      </TouchableOpacity>
 
       {/* Agency Section */}
       {user.agencyId ? (
@@ -356,6 +376,34 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  walletCard: {
+    backgroundColor: '#f0fdf4',
+    margin: 12,
+    padding: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  walletHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  walletTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#15803d',
+  },
+  walletBalance: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#15803d',
+  },
+  walletSubtitle: {
+    fontSize: 14,
+    color: '#16a34a',
   },
   agencyCard: {
     backgroundColor: '#eff6ff',

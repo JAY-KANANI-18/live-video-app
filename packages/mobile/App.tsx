@@ -11,6 +11,10 @@ import SignupScreen from './src/screens/auth/SignupScreen';
 import ProfileScreen from './src/screens/profile/ProfileScreen';
 import JoinAgencyScreen from './src/screens/agency/JoinAgencyScreen';
 import AgencyScreen from './src/screens/agency/AgencyScreen';
+import WalletScreen from './src/screens/wallet/WalletScreen';
+import TopupScreen from './src/screens/wallet/TopupScreen';
+import SendGiftScreen from './src/screens/wallet/SendGiftScreen';
+import TransactionsScreen from './src/screens/wallet/TransactionsScreen';
 
 // Import store
 import { useAuthStore } from './src/store/authStore';
@@ -44,6 +48,26 @@ function MainStack() {
         name="ProfileTab" 
         component={ProfileScreen}
         options={{ title: 'Profile' }}
+      />
+      <Stack.Screen 
+        name="Wallet" 
+        component={WalletScreen}
+        options={{ title: 'My Wallet' }}
+      />
+      <Stack.Screen 
+        name="Topup" 
+        component={TopupScreen}
+        options={{ title: 'Top Up Diamonds' }}
+      />
+      <Stack.Screen 
+        name="SendGift" 
+        component={SendGiftScreen}
+        options={{ title: 'Send Gift' }}
+      />
+      <Stack.Screen 
+        name="Transactions" 
+        component={TransactionsScreen}
+        options={{ title: 'Transaction History' }}
       />
       <Stack.Screen 
         name="JoinAgency" 
