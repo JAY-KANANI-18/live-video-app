@@ -200,17 +200,26 @@ export default function ProfileScreen({ navigation }: any) {
         )}
       </View>
 
-      {/* Wallet Section */}
-      <TouchableOpacity
-        style={styles.walletCard}
-        onPress={() => navigation.navigate('Wallet')}
-      >
-        <View style={styles.walletHeader}>
-          <Text style={styles.walletTitle}>💎 My Wallet</Text>
-          <Text style={styles.walletBalance}>{user.diamonds || 0} Diamonds</Text>
-        </View>
-        <Text style={styles.walletSubtitle}>Tap to view wallet →</Text>
-      </TouchableOpacity>
+      {/* Quick Actions */}
+      <View style={styles.quickActions}>
+        <TouchableOpacity
+          style={styles.actionCard}
+          onPress={() => navigation.navigate('Wallet')}
+        >
+          <Text style={styles.actionIcon}>💎</Text>
+          <Text style={styles.actionTitle}>Wallet</Text>
+          <Text style={styles.actionSubtitle}>{user.diamonds || 0} diamonds</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionCard}
+          onPress={() => navigation.navigate('ChatList')}
+        >
+          <Text style={styles.actionIcon}>💬</Text>
+          <Text style={styles.actionTitle}>Messages</Text>
+          <Text style={styles.actionSubtitle}>Chat</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Agency Section */}
       {user.agencyId ? (
@@ -377,33 +386,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  walletCard: {
-    backgroundColor: '#f0fdf4',
-    margin: 12,
-    padding: 20,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#bbf7d0',
-  },
-  walletHeader: {
+  quickActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    padding: 12,
+    gap: 12,
+  },
+  actionCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  actionIcon: {
+    fontSize: 32,
     marginBottom: 8,
   },
-  walletTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#15803d',
-  },
-  walletBalance: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#15803d',
-  },
-  walletSubtitle: {
+  actionTitle: {
     fontSize: 14,
-    color: '#16a34a',
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 4,
+  },
+  actionSubtitle: {
+    fontSize: 12,
+    color: '#6b7280',
   },
   agencyCard: {
     backgroundColor: '#eff6ff',

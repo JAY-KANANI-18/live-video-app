@@ -75,18 +75,22 @@ enum PaymentStatus {
   PENDING
   SUCCESS
   FAILED
-  REFUNDED
 }
 
 enum PaymentProvider {
   RAZORPAY
   STRIPE
-  MOCK  // For development/testing
+  MOCK
+}
+
+enum RoomType {
+  DIRECT      // 1-on-1 chat
+  CALL        // Call room
+  GROUP       // Group chat
 }
 
 model User {
   id              String      @id @default(cuid())
-  
   // Auth fields
   email           String?     @unique
   emailVerified   Boolean     @default(false)
@@ -144,20 +148,26 @@ model User {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   lastLoginAt     DateTime?
-  
   // Relations
   hostProfile     HostProfile?
   wallet          Wallet?
   refreshTokens   RefreshToken[]
   otpCodes        OTPCode[]
-  callsInitiated  Call[]      @relation("CallInitiator")
-  callsReceived   Call[]      @relation("CallReceiver")
+  callsInitiated  Call[]             @relation("CallInitiator")
+  callsReceived   Call[]             @relation("CallReceiver")
   callParticipants CallParticipant[]
+  
   transactions    Transaction[]
   paymentOrders   PaymentOrder[]
-  giftsGiven      Gift[]      @relation("GiftGiver")
-  giftsReceived   Gift[]      @relation("GiftReceiver")
+  giftsGiven      Gift[]             @relation("GiftGiver")
+  giftsReceived   Gift[]             @relation("GiftReceiver")
+  
   withdrawals     Withdrawal[]
+  
+  // Chat relations
+  roomsAsUser1    Room[]             @relation("RoomUser1")
+  roomsAsUser2    Room[]             @relation("RoomUser2")
+  messages        Message[]          @relation("MessageSender")
   
   @@index([email])
   @@index([phoneNumber])
@@ -321,6 +331,7 @@ model Call {
   // Relations
   participants    CallParticipant[]
   gifts           Gift[]
+  room            Room?              // Associated chat room
   
   @@index([callerId])
   @@index([receiverId])
@@ -439,7 +450,6 @@ model PaymentOrder {
   @@index([userId])
   @@index([status])
   @@index([providerOrderId])
-  @@index([idempotencyKey])
   @@index([createdAt])
 }
 
@@ -467,5 +477,70 @@ model Withdrawal {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+}
+
+// Real-time chat models
+model Room {
+  id              String      @id @default(cuid())
+  
+  type            RoomType    @default(DIRECT)
+  name            String?     // For group chats
+  
+  // For DIRECT rooms
+  user1Id         String?
+  user1           User?       @relation("RoomUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2Id         String?
+  user2           User?       @relation("RoomUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+  
+  // For CALL rooms
+  callId          String?     @unique
+  call            Call?       @relation(fields: [callId], references: [id], onDelete: Cascade)
+  
+  // Metadata
+  metadata        Json?       // Group members, call info, etc.
+  
+  // Last message info
+  lastMessageAt   DateTime?
+  lastMessageText String?
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  messages        Message[]
+  
+  @@index([user1Id, user2Id])
+  @@index([callId])
+  @@index([type])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id              String      @id @default(cuid())
+  
+  roomId          String
+  room            Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  
+  senderId        String
+  sender          User        @relation("MessageSender", fields: [senderId], references: [id])
+  
+  // Message content
+  content         String      // text content
+  type            String      @default("text") // text, image, gift, system
+  metadata        Json?       // gift details, image URLs, etc.
+  
+  // Ordering
+  sequenceId      Int         // Auto-increment per room for ordering
+  
+  // Read tracking
+  readBy          Json?       // Array of user IDs who read this message
+  
+  // Timestamps
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@index([roomId, sequenceId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@unique([roomId, sequenceId]) // Guarantee ordering
 }
 

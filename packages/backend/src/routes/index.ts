@@ -3,6 +3,7 @@ import authRoutes from './auth';
 import agencyRoutes from './agency';
 import walletRoutes from './wallet';
 import adminRoutes from './admin';
+import chatRoutes from './chat';
 
 const router = Router();
 
@@ -31,11 +32,13 @@ router.use('/v1/auth', authRoutes);
 // Agency routes
 router.use('/v1/agency', agencyRoutes);
 
-// Wallet routes
 router.use('/v1/wallet', walletRoutes);
 
 // Admin routes
 router.use('/v1/admin', adminRoutes);
+
+// Chat routes
+router.use('/v1/chat', chatRoutes);
 
 // TODO: Add more route modules
 // router.use('/v1/users', userRoutes);

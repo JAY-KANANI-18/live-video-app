@@ -4,29 +4,18 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
-import { Server } from 'socket.io';
-
-import { logger } from './config/logger';
-import { connectRedis } from './config/redis';
-import { setupWebSocket } from './config/websocket';
-import routes from './routes';
 import { errorHandler } from './middleware/errorHandler';
+import apiRoutes from './routes';
+import { logger } from './config/logger';
+import { websocketService } from './services/websocketService';
+import { connectRedis } from './config/redis';
 
 // Load environment variables
-dotenv.config({ path: '.env.local' });
 dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, {
-  cors: {
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
-    credentials: true,
-  },
-});
-
 const PORT = process.env.PORT || 3000;
-const WS_PORT = process.env.WS_PORT || 3001;
 
 // Middleware
 app.use(helmet());
@@ -49,7 +38,7 @@ app.get('/health', (req, res) => {
 });
 
 // API routes
-app.use('/api', routes);
+app.use('/api', apiRoutes);
 
 // Error handler
 app.use(errorHandler);
@@ -59,6 +48,9 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
+// Initialize WebSocket service
+websocketService.initialize(httpServer);
+
 // Initialize services and start server
 async function start() {
   try {
@@ -66,19 +58,11 @@ async function start() {
     await connectRedis();
     logger.info('✓ Redis connected');
 
-    // Setup WebSocket
-    setupWebSocket(io);
-    logger.info('✓ WebSocket configured');
-
-    // Start HTTP server
-    app.listen(PORT, () => {
-      logger.info(`✓ HTTP Server running on port ${PORT}`);
-      logger.info(`✓ Environment: ${process.env.NODE_ENV}`);
-    });
-
-    // Start WebSocket server
-    httpServer.listen(WS_PORT, () => {
-      logger.info(`✓ WebSocket Server running on port ${WS_PORT}`);
+    // Start HTTP server with WebSocket
+    httpServer.listen(PORT, () => {
+      logger.info(`✓ Server running on port ${PORT}`);
+      logger.info(`✓ WebSocket server running on ws://localhost:${PORT}/ws`);
+      logger.info(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);
@@ -87,16 +71,18 @@ async function start() {
 }
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully...');
+  await websocketService.shutdown();
   httpServer.close(() => {
     logger.info('Server closed');
     process.exit(0);
   });
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   logger.info('SIGINT received, shutting down gracefully...');
+  await websocketService.shutdown();
   httpServer.close(() => {
     logger.info('Server closed');
     process.exit(0);
@@ -104,5 +90,3 @@ process.on('SIGINT', () => {
 });
 
 start();
-
-export { app, io };

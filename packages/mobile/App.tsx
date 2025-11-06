@@ -15,6 +15,8 @@ import WalletScreen from './src/screens/wallet/WalletScreen';
 import TopupScreen from './src/screens/wallet/TopupScreen';
 import SendGiftScreen from './src/screens/wallet/SendGiftScreen';
 import TransactionsScreen from './src/screens/wallet/TransactionsScreen';
+import ChatListScreen from './src/screens/chat/ChatListScreen';
+import ChatRoomScreen from './src/screens/chat/ChatRoomScreen';
 
 // Import store
 import { useAuthStore } from './src/store/authStore';
@@ -68,6 +70,16 @@ function MainStack() {
         name="Transactions" 
         component={TransactionsScreen}
         options={{ title: 'Transaction History' }}
+      />
+      <Stack.Screen 
+        name="ChatList" 
+        component={ChatListScreen}
+        options={{ title: 'Messages' }}
+      />
+      <Stack.Screen 
+        name="ChatRoom" 
+        component={ChatRoomScreen}
+        options={{ headerShown: true }}
       />
       <Stack.Screen 
         name="JoinAgency" 
